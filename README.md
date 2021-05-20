@@ -20,3 +20,12 @@ Os arquivos serão distribuídos entre os elementos (nós) ativos do sistema (n�
 - Considere os hosts não estando em rede local, ou seja, não há comunicação broadcast ou multicast entre o grupo de hosts;
 
 ##### Considere inicialmente a pasta vazia (sem arquivos) e os testes serão executados com 4 hosts.
+
+##### Para compilar o projeto
+1. rpcgen agenda.x
+2. g++ server.cpp agenda_svc.c agenda_xdr.c -o server -lnsl
+3. g++ client.c agenda_clnt.c agenda_xdr.c -o client -lnsl
+
+##### Para rodar o projeto
+1. ./server
+2. ./client

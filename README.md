@@ -22,10 +22,9 @@ Os arquivos serão distribuídos entre os elementos (nós) ativos do sistema (n�
 ##### Considere inicialmente a pasta vazia (sem arquivos) e os testes serão executados com 4 hosts.
 
 ##### Para compilar o projeto
-1. rpcgen agenda.x
-2. g++ server.cpp agenda_svc.c agenda_xdr.c -o server -lnsl
-3. g++ client.c agenda_clnt.c agenda_xdr.c -o client -lnsl
+1. javac *.java (nas 4 pastas)
 
 ##### Para rodar o projeto
-1. ./server
-2. ./client
+1. java Server
+2. java Client
+3. Repetir o processo nas outras pastas

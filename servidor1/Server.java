@@ -285,4 +285,35 @@ public class Server {
 			return port;
 		}
 	}
+
+	private static Integer findDuplicate(Socket socket, File duplicateFile, Integer remoteport) {
+		String duplicateFileName = duplicateFile.getName();
+		String msg = "";
+		Integer count = 0, server = 0;
+		switch(remoteport) {
+			case 6001:
+				server = 1;
+				break;
+			case 6002:
+				server = 2;
+				break;
+			case 6003:
+				server = 3;
+				break;
+			case 6004:
+				server = 4;
+				break;
+		}
+			
+		msg += getRemoteListFiles(remoteport);
+		String[] parts = msg.split("\t");
+		while (parts.length > count) {
+			if (duplicateFile.getName().equals(parts[count])) {
+				System.out.println("Duplicata encontrada no server " + server);
+				return server;
+			}
+			count++;
+		}
+		return 0;
+	}
 }

@@ -316,4 +316,47 @@ public class Server {
 		}
 		return 0;
 	}
+
+	private static Integer getLowestFolderBck() throws IOException{
+		long s2,s3,s4;
+
+		s2 = getRemoteSizeFolder(remoteport1);
+		s3 = getRemoteSizeFolder(remoteport2);
+		s4 = getRemoteSizeFolder(remoteport3);
+
+		if(s2 == 0){
+			return remoteport1;
+		}
+		if(s3 == 0){
+			return remoteport2;
+		}
+		if(s4 == 0){
+			return remoteport3;
+		}
+		if(s1 <= s2 && s1 <= s3 && s1 <= s4 ){
+			return port;
+		}else if(s2 <= s1 && s2 <= s3 && s2 <= s4){
+			return remoteport1;
+		}else if(s3 <= s1 && s3 <= s2 && s3 <= s4){
+			return remoteport2;
+		}else if(s4 <= s1 && s4 <= s2 && s4 <= s3){
+			return remoteport3;
+		}
+		else{
+			return remoteport1;
+		}
+	}
+
+	private static void setNewFileBck(Socket socket, String nomeArquivo) throws IOException {
+		try{
+			Path source = Paths.get(nomeArquivo);
+        	Path target = Paths.get("arquivos");
+        	Files.copy(source,target.resolveSibling(source.getFileName() + ".bck"));
+
+			upload(socket,"Arquivo backup criado com sucesso");
+		}catch(Exception e){
+			upload(socket,"Erro ao criar arquivo backup");
+		}
+		
+	}
 }

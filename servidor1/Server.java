@@ -88,21 +88,35 @@ public class Server {
 			case 1:
 				getListFiles(socket);
 				break;
+			case 10:
+				getSimpleListFiles(socket);
+				break;
 			case 2:
 				setNewFile(socket,nomeArquivo);
 				break;
 			case 3:
 				renameFile(socket,nomeArquivo,antigoArquivo);
 				break;
+			case 11:
+				renameSimpleFile(socket, nomeArquivo, antigoArquivo);
+				break;
 			case 4:
 				removeFile(socket,nomeArquivo);
+				break;
+			case 12:
+				removeSimpleFile(socket, nomeArquivo);
 				break;
 			case 6:
 				String msg = "" + getLowestFolder();
 	    		upload(socket,msg);
+				break;
 			case 7:
 				String msg2 = "" + getSizeFolder();
 				upload(socket,msg2);
+				break;
+			case 9:
+				getNewFile(socket,nomeArquivo);
+				break;
 			default:
 				break;
 		}
@@ -125,9 +139,20 @@ public class Server {
 			upload(socket,"Erro ao excluir arquivo");
 		}
 	}
-	private static void removeRemoteFile(Integer port, String nomeArquivo) {
+	private static void removeSimpleFile(Socket socket, String nomeArquivo) throws IOException {
+		try{
+			File file = new File("./arquivos/" + nomeArquivo);
+
+			file.delete();
+			
+			upload(socket,"Arquivo removido com sucesso");
+		}catch(Exception e){
+			upload(socket,"Erro ao excluir arquivo");
+		}
+	}
+	private static String removeRemoteFile(Integer port, String nomeArquivo) throws IOException {
 		ArrayList<String> my = new ArrayList<String>();
-		my.add("4");
+		my.add("12");
 		my.add(nomeArquivo);
 
 		Socket socketemp = new Socket("127.0.0.1", port);
@@ -158,9 +183,20 @@ public class Server {
 			upload(socket,"Erro ao renomear arquivo");
 		}
 	}
-	private static void renameRemoteFile(Integer port, String nomeArquivo, String antigoArquivo) {
+	private static void renameSimpleFile(Socket socket, String nomeArquivo, String antigoArquivo) throws IOException {
+		try{
+			File file = new File("./arquivos/" + nomeArquivo);
+
+			file.renameTo(new File("./arquivos/" + antigoArquivo));
+
+			upload(socket,"Arquivo renomeado com sucesso");
+		}catch(Exception e){
+			upload(socket,"Erro ao renomear arquivo");
+		}
+	}
+	private static String renameRemoteFile(Integer port, String nomeArquivo, String antigoArquivo) throws IOException {
 		ArrayList<String> my = new ArrayList<String>();
-		my.add("3");
+		my.add("11");
 		my.add(nomeArquivo);
 		my.add(antigoArquivo);
 
@@ -182,35 +218,85 @@ public class Server {
 			Path source = Paths.get(nomeArquivo);
         	Path target = Paths.get("arquivos");
 
-        	Files.copy(source,target.resolve(source.getFileName()));
+			File file = new File("./arquivos/" + nomeArquivo);
 
+			Integer s1 = findDuplicate(socket,file);
+			Integer porta = getLowestFolder();
+			if(s1 == 0){
+				if(porta == port){
+					Files.copy(source,target.resolve(source.getFileName()));
+				}else{
+					setRemoteNewFile(socket,nomeArquivo,porta);
+				}
+				upload(socket,"Arquivo criado com sucesso");
+
+			}else{
+				upload(socket,"Arquivo duplicado");
+
+			}
+
+		}catch(Exception e){
+			upload(socket,"Erro ao criar arquivo");
+		}
+	}
+	private static void getNewFile(Socket socket, String nomeArquivo) throws IOException {
+		try{
+			Path source = Paths.get(nomeArquivo);
+        	Path target = Paths.get("arquivos");
+
+			File file = new File("./arquivos/" + nomeArquivo);
+			Files.copy(source,target.resolve(source.getFileName()));
 			upload(socket,"Arquivo criado com sucesso");
 		}catch(Exception e){
 			upload(socket,"Erro ao criar arquivo");
 		}
-		
+	}
+	private static String setRemoteNewFile(Socket socket,String nomeArquivo,Integer port) throws IOException {
+		try{
+			ArrayList<String> my = new ArrayList<String>();
+			my.add("9");
+			my.add(nomeArquivo);
+	
+			Socket socketemp = new Socket("127.0.0.1", port);
+			OutputStream output = socketemp.getOutputStream();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(baos);
+			out.writeObject(my);
+			byte[] saida = baos.toByteArray();
+			output.write(saida);
+			BufferedReader input = new BufferedReader(new InputStreamReader(socketemp.getInputStream()));
+			String input2 = input.readLine();
+
+			return input2;
+		}catch(IOException e){
+			return "error";
+		}
 	}
 	private static String getRemoteListFiles(Integer port) throws IOException {
-		ArrayList<String> my = new ArrayList<String>();
-		my.add("1");
-		my.add("listagem");
+		try{
+			ArrayList<String> my = new ArrayList<String>();
+			my.add("10");
+			my.add("listagem");
+	
+			Socket socketemp = new Socket("127.0.0.1", port);
+			OutputStream output = socketemp.getOutputStream();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(baos);
+			out.writeObject(my);
+			byte[] saida = baos.toByteArray();
+			output.write(saida);
+			BufferedReader input = new BufferedReader(new InputStreamReader(socketemp.getInputStream()));
+			String input2 = input.readLine();
 
-		Socket socketemp = new Socket("127.0.0.1", port);
-		OutputStream output = socketemp.getOutputStream();
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream out = new ObjectOutputStream(baos);
-		out.writeObject(my);
-		byte[] saida = baos.toByteArray();
-		output.write(saida);
-		BufferedReader input = new BufferedReader(new InputStreamReader(socketemp.getInputStream()));
-		String input2 = input.readLine();
-		
-		return input2;
+			return input2;
+		}catch(IOException e){
+			return "error";
+		}
 	}
 	private static String getListFiles(Socket socket) throws IOException {
 		File file = new File("./arquivos/");
 		File[] arquivos = file.listFiles();
-		String msg = "Lista de arquivos\t";
+		String msg = "\t";
 		for (File fileTmp : arquivos) {
 			msg += fileTmp.getName();
 			msg += "\t";
@@ -222,7 +308,18 @@ public class Server {
 		
 		return msg;
 	}
-
+	private static String getSimpleListFiles(Socket socket) throws IOException {
+		File file = new File("./arquivos/");
+		File[] arquivos = file.listFiles();
+		String msg = "\t";
+		for (File fileTmp : arquivos) {
+			msg += fileTmp.getName();
+			msg += "\t";
+		}
+		upload(socket,msg);
+		
+		return msg;
+	}
 	private static long getSizeFolder() throws IOException {
 		File directory = new File("./arquivos/");
 		long length = 0;
@@ -285,8 +382,26 @@ public class Server {
 			return port;
 		}
 	}
-
-	private static Integer findDuplicate(Socket socket, File duplicateFile, Integer remoteport) {
+	private static Integer findDuplicate(Socket socket, File duplicateFile){
+		String duplicateFileName = duplicateFile.getName();
+		String msg = "";
+		Integer count = 0;
+	
+		try{
+			msg += getListFiles(socket);
+		}catch(Exception e){
+			return 0;
+		}
+		String[] parts = msg.split("\t");
+		while (parts.length > count) {
+			if (duplicateFile.getName().equals(parts[count])) {
+				return 1;
+			}
+			count++;
+		}
+		return 0;
+	}
+	private static Integer findRemoteDuplicate(File duplicateFile, Integer remoteport) throws IOException {
 		String duplicateFileName = duplicateFile.getName();
 		String msg = "";
 		Integer count = 0, server = 0;
@@ -304,12 +419,15 @@ public class Server {
 				server = 4;
 				break;
 		}
-			
-		msg += getRemoteListFiles(remoteport);
+		
+		try{
+			msg += getRemoteListFiles(remoteport);
+		}catch(Exception e){
+			return 0;
+		}
 		String[] parts = msg.split("\t");
 		while (parts.length > count) {
 			if (duplicateFile.getName().equals(parts[count])) {
-				System.out.println("Duplicata encontrada no server " + server);
 				return server;
 			}
 			count++;
@@ -318,12 +436,16 @@ public class Server {
 	}
 
 	private static Integer getLowestFolderBck() throws IOException{
-		long s2,s3,s4;
+		long s1,s2,s3,s4;
 
+		s1 = getSizeFolder();
 		s2 = getRemoteSizeFolder(remoteport1);
 		s3 = getRemoteSizeFolder(remoteport2);
 		s4 = getRemoteSizeFolder(remoteport3);
 
+		if(s1 == 0){
+			return port;
+		}
 		if(s2 == 0){
 			return remoteport1;
 		}
